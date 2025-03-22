@@ -155,7 +155,15 @@ export const executeMint = async (
       log.success(`交易已在区块 [${receipt.blockNumber}] 中确认`);
       log.info(`实际使用的 Gas: ${receipt.gasUsed.toString()}`);
       
-      return { tx, successVariant: mintVariant };
+      return { 
+        tx, 
+        successVariant: mintVariant,
+        status: receipt.status,
+        blockNumber: receipt.blockNumber,
+        gasUsed: receipt.gasUsed.toString(),
+        effectiveGasPrice: receipt.effectiveGasPrice,
+        txHash: tx.hash
+      };
     } catch (err) {
       // 如果 fourParams 失败，尝试 twoParams
       if (mintVariant === "fourParams" && err.code === ethers.errors.CALL_EXCEPTION) {
@@ -165,7 +173,17 @@ export const executeMint = async (
           1,
           txOptions
         );
-        return { tx, successVariant: "twoParams" };
+        
+        const receipt = await tx.wait();
+        return { 
+          tx, 
+          successVariant: "twoParams",
+          status: receipt.status,
+          blockNumber: receipt.blockNumber,
+          gasUsed: receipt.gasUsed.toString(),
+          effectiveGasPrice: receipt.effectiveGasPrice,
+          txHash: tx.hash
+        };
       }
       throw err;
     }
@@ -183,7 +201,7 @@ export const executeMint = async (
         log.error("详细错误:", err.error);
       }
     }
-    return { error: err.message };
+    return { error: err.message, transaction: err.transaction };
   }
 };
 
